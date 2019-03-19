@@ -1,0 +1,57 @@
+---
+- name: check total no of vfs and total intf names are equal or not
+  fail:
+    msg: " Total no of vfs is not equal to the total no of virt_intf_name"
+  when: "{{ total_num_vfs }} != {{ virt_intf_name | length }}"
+
+- name: Avi SE | Autoregistration | Get the cloud uuid from se_cloud_name
+  avi_api_session:
+    controller: "{{ vm_ctrl_ip }}"
+    username: "{{ vm_ctrl_username }}"
+    password: "{{ vm_ctrl_password }}"
+    tenant: "admin"
+    api_version: "{{ vm_ctrl_version }}"
+    http_method: get
+    path: "cloud?name=Default-Cloud"
+  register: se_cloud_data
+  delegate_to: localhost
+
+- name: Avi SE | Autoregistration | Get a token from the Avi Controller
+  avi_api_session:
+    controller: "{{ vm_ctrl_ip }}"
+    username: "{{ vm_ctrl_username }}"
+    password: "{{ vm_ctrl_password }}"
+    tenant: "admin"
+    api_version: "{{ vm_ctrl_version }}"
+    http_method: get
+    path: securetoken-generate?cloud_uuid={{ se_cloud_data.obj.results[0].uuid }}
+  register: se_authtoken
+  when: se_auth_token is undefined
+  delegate_to: localhost
+
+
+- name: Avi SE | Autoregistration | Get a se.qcow2 from the Avi Controller
+  avi_api_fileservice:
+    controller: "{{ vm_ctrl_ip }}"
+    username: "{{ vm_ctrl_username }}"
+    password: "{{ vm_ctrl_password }}"
+    upload: false
+    path: seova
+    file_path: /tmp/se.qcow2
+    params:
+      file_format: qcow2
+    api_version: "{{ vm_ctrl_version }}"
+  when: kvm_vm_base_img is undefined
+  delegate_to: localhost
+
+- name: Auto Generate | Copy se.qcow2 file from controller
+  shell: sshpass -p "{{ kvm_host_password }}" scp /tmp/se.qcow2 "{{ kvm_host_username }}"@"{{ kvm_host_ip }}":/root/{{ kvm_vm_hostname }}/se.qcow2
+  when: kvm_vm_base_img is undefined
+  delegate_to: localhost
+
+- name: "Avi SE | Autoregistration | Append the token to the docker environment variables."
+  set_fact:
+    se_auth_token: "{{ se_authtoken.obj.auth_token }}"
+  when: se_auth_token is undefined
+
+- debug: msg="Recieved Authentication {{ se_auth_token }} from {{ vm_ctrl_ip }}"
