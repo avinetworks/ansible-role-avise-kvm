@@ -4,13 +4,10 @@ kvm_vm_hostname: ~
 kvm_vm_public_ip: ~
 kvm_vm_root_pwd: ~
 kvm_se_vm_base_img: ~
-kvm_vm_vcpus: "1"
-kvm_vm_ram: "4096"
-kvm_vm_os_disk_name: "{{ kvm_vm_hostname }}"
-kvm_vm_os_disk_size: "10G"
+kvm_vm_vcpus: "4"
+kvm_vm_ram: "8192"
 
 vm_ctrl_ip: ~
-auth_tkoken: ~
 se_mgmt_ip: ~
 se_mgmt_mask: ~
 se_def_gw: ~

@@ -1,5 +1,5 @@
 ---
-- name: Avi SE | Deployment
+- name: Avi SE | KVM | Requirements
   include: requirements.yml
 
 - name: Set the location of cloud image
@@ -69,20 +69,10 @@
 - name: Generated host device string
   debug: msg="{{ host_dv_str }}"
 
-#- name: Copy se
-#  command: cp /root/se3.qcow2 {{ IMAGE }}
-- name: Pront meta data
-  command: cat {{ META_DATA }}
-
 - name: Create CD-ROM ISO with cloud-init config
   command: >
     genisoimage -input-charset utf-8 -output {{ CI_ISO }} -volid cidata -joliet -r {{ USER_DATA }} {{ META_DATA }}
   ignore_errors: yes
-
-#- name: Create xml se vm
-#  command: >
-#    virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk /var/lib/libvirt/images/{{ kvm_vm_hostname }}.qcow2,format=qcow2,bus=virtio --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ host_mgmt_intf }},source_mode=bridge,model=virtio --os-type=linux --os-variant=ubuntu16.04 --noautoconsole --host-device={{ host_device }}
-#  register: vm_xml_content
 
 - name: " Run if pinning is yes "
   command: >
@@ -95,19 +85,6 @@
     virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk {{ IMAGE }},format=qcow2,bus=virtio --check all=off --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ host_mgmt_intf }},source_mode=bridge,model=virtio --os-type=linux --os-variant=ubuntu16.04 --noautoconsole {{ host_dv_str }}
   register: vm_xml_content
   when: pinning_option == "no"
-
-#- name: Copy se
-#  command: cp /root/se.qcow2 {{ IMAGE }}
-
-#- name: Create CD-ROM ISO with cloud-init config
-#  command: >
-#    genisoimage -input-charset utf-8 -output {{ CI_ISO }} -volid cidata -joliet -r /tmp/user-data /tmp/avi_meta-data
-#  ignore_errors: yes
-
-#- name: Create xml se vm
-#  command: >
-#    virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk /var/lib/libvirt/images/{{ kvm_vm_hostname }}.qcow2,format=qcow2,bus=virtio --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ host_mgmt_intf }},source_mode=bridge,model=virtio --os-type=linux --os-variant=ubuntu16.04 --noautoconsole --host-device={{ host_device }}
-#  register: vm_xml_content
 
 - name: Eject cdrom
   command: "virsh change-media {{ kvm_vm_hostname }} hda --eject --config"
