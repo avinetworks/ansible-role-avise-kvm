@@ -13,18 +13,18 @@ Role Variables
 | Variable | Required | Default | Comments |
 |----------|----------|---------|----------|
 |kvm_vm_hostname|Yes||Name for VM|
-|kvm_vm_base_img|No||se.qcow2 file|
+|kvm_vm_base_img|No||se.qcow2 or controller.qcow2 file|
 |kvm_vm_vcpus|No|4|How many cpus the service engine will use.|
 |kvm_vm_ram|No|8912|How much memory the service engine will use.|
 |host_mgmt_intf|Yes||host management interface name|
 |vm_ctrl_ip|Yes||The IP address of the controller.|
 |vm_ctrl_username|Yes||The username to login into the controller.|
 |vm_ctrl_password|Yes||The password to login into the controller.|
-|vm_ctrl_version|Yes||The username to login into the controller.|
+|vm_ctrl_version|Yes||The controller version.|
 |se_auth_token|No||If defined it will be the token used to register the service engine to the controller|
 |bond_seq|Yes||Bonding sequence|
 |se_mgmt_ip|Yes||Management Ip for the service engine|
-|se_mgmt_mask|Yes||Subnet mast for the service engine|
+|se_mgmt_mask|Yes||Subnet mask|
 |se_def_gw|Yes||Default gateway for service engine|
 |pinning_option|Yes||If you want to enable pinning CPU for the VM|
 |total_num_vfs|Yes||Numbers VFs will be pass-through to VM|

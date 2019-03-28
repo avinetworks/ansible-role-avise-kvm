@@ -1,0 +1,95 @@
+---
+
+- name: "Avi SE | KVM | Requirements"
+  include: requirements.yml
+
+- name: "Set the location of cloud image"
+  set_fact:
+    IMAGE: "/var/lib/libvirt/images/{{ kvm_vm_hostname }}.qcow2"
+
+- name: "Avi SE | Create the meta-data config file for vm on KVM host"
+  template:
+    src: avi_meta-data.j2
+    dest: /root/{{ kvm_vm_hostname }}/avi_meta-data
+
+- name: "Avi SE | Create the user-data config file for VM"
+  template:
+    src: user-data.j2
+    dest: /root/{{ kvm_vm_hostname }}/user-data
+
+- name: "Avi SE | Copy se qcow2 file to /var/lib/libvirt/images/"
+  copy:
+    src: "{{ kvm_vm_base_img }}"
+    dest: "{{ IMAGE }}"
+    remote_src: yes
+    owner: root
+  when: kvm_vm_base_img is defined
+
+- name: "Avi SE | Set the path to the USER DATA"
+  set_fact:
+    AVI_USER_DATA: /root/{{ kvm_vm_hostname }}/user-data
+
+- name: "Avi SE | Set the path to the META DATA"
+  set_fact:
+    AVI_META_DATA: /root/{{ kvm_vm_hostname }}/avi_meta-data
+
+- name: "Avi SE | Copy se qcow2 file in /root/{{ kvm_vm_hostname }}"
+  copy:
+    src: "/root/{{ kvm_vm_hostname }}/se.qcow2"
+    dest: "{{ IMAGE }}"
+    remote_src: yes
+    owner: root
+  when: kvm_vm_base_img is undefined
+
+- name: "Avi SE | KVM | Get interface Name from virt_intf_name"
+  shell: >
+    ethtool -i {{ item }} | grep "bus-info" | cut -f2 -d " "
+  register: intf_name
+  loop: "{{ virt_intf_name }}"
+
+- name: "Avi SE | KVM | Replace and update interface name"
+  set_fact:
+    data: "pci_{{ item['stdout_lines'][0]  | regex_replace('[:.]', '_') }}"
+  register: result
+  with_items: "{{ intf_name['results'] }}"
+
+- name: "Avi SE | KVM | Generate host device string"
+  set_fact:
+    host_dv_str:  "{{ host_dv_str | default() }} --host-device={{ item['ansible_facts']['data'] }}"
+  loop: "{{ result['results'] }}"
+
+- name: "Avi SE | KVM | Generated host device string"
+  debug: msg="{{ host_dv_str }}"
+
+- name: "Avi SE | KVM | Create CD-ROM ISO with cloud-init config"
+  command: >
+    genisoimage -input-charset utf-8 -output {{ CI_ISO }} -volid cidata -joliet -r {{ AVI_USER_DATA }} {{ AVI_META_DATA }}
+  ignore_errors: yes
+
+- name: Get Os Version
+  shell: hostnamectl | grep 'Operating System'
+  register: os_version
+
+- name: "Avi SE | KVM | Run if os_version is 17.04 OR OS is CentOS AND pinning is Yes"
+  command: >
+    virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk {{ IMAGE }},format=qcow2,bus=virtio --check all=off --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ host_mgmt_intf }},source_mode=bridge,model=virtio --os-type=linux --os-variant=ubuntu16.04 --cpuset=auto --disk size={{ kvm_vm_os_disk_size }} --noautoconsole {{ host_dv_str }}
+  register: vm_xml_content
+  when: '"17.04" in os_version.stdout or "CentOS" in os_version.stdout and pinning_option == "yes"'
+
+- name: "Avi SE | KVM | Run if os_version is 16.04 AND pinning is Yes"
+  command: >
+    virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk {{ IMAGE }},format=qcow2,bus=virtio --check all=off --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ host_mgmt_intf }},source_mode=bridge,model=virtio --os-type=linux --os-variant=ubuntu16.04 --disk size={{ kvm_vm_os_disk_size }} --noautoconsole {{ host_dv_str }}
+  register: vm_xml_content
+  when: '"16.04" in os_version.stdout and pinning_option == "yes"'
+
+- name: "Avi SE | KVM | If Pinning is No"
+  command: > 
+    virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk {{ IMAGE }},format=qcow2,bus=virtio --check all=off --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ host_mgmt_intf }},source_mode=bridge,model=virtio --os-type=linux --os-variant=ubuntu16.04 --disk size={{ kvm_vm_os_disk_size }} --noautoconsole {{ host_dv_str }}
+  register: vm_xml_content
+  when: pinning_option == "no"
+
+- name: "Avi SE | KVM | Eject CDROM"
+  command: "virsh change-media {{ kvm_vm_hostname }} hda --eject --config"
+
+- name: "Avi SE | KVM | Remove CI_ISO"
+  command: "rm -rf /root/{{ kvm_vm_hostname }} {{ CI_ISO }}"

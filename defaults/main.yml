@@ -6,7 +6,7 @@ kvm_vm_root_pwd: ~
 kvm_se_vm_base_img: ~
 kvm_vm_vcpus: "4"
 kvm_vm_ram: "8192"
-
+kvm_vm_os_disk_size: "40"
 vm_ctrl_ip: ~
 se_mgmt_ip: ~
 se_mgmt_mask: ~
