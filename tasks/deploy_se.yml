@@ -50,13 +50,13 @@
 - name: "Avi SE | KVM | Replace and update interface name"
   set_fact:
     data: "pci_{{ item['stdout_lines'][0]  | regex_replace('[:.]', '_') }}"
-  register: result
+  register: updated_intf_name
   with_items: "{{ intf_name['results'] }}"
 
 - name: "Avi SE | KVM | Generate host device string"
   set_fact:
     host_dv_str:  "{{ host_dv_str | default() }} --host-device={{ item['ansible_facts']['data'] }}"
-  loop: "{{ result['results'] }}"
+  loop: "{{ updated_intf_name['results'] }}"
 
 - name: "Avi SE | KVM | Generated host device string"
   debug: msg="{{ host_dv_str }}"
