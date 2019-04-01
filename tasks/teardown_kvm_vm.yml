@@ -1,5 +1,4 @@
 ---
-# tasks file for playbooks/roles/kvm-vm
 - name: "Avi SE | KVM | Destroy SE VM"
   command: "virsh destroy {{ kvm_vm_hostname }}"
   register: virsh_destroy_results
