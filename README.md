@@ -6,7 +6,7 @@ Requirements
  - python >= 2.6
  - avisdk : It can be installed by `pip install avisdk --upgrade`
  - avinetworks.avisdk : It can be installed by `ansible-galaxy install -f avinetworks.avisdk` 
-
+kvm_vm_os_disk_size
 Role Variables
 --------------
 
@@ -16,11 +16,13 @@ Role Variables
 |kvm_vm_base_img|No||se.qcow2 or controller.qcow2 file|
 |kvm_vm_vcpus|No|4|How many cpus the service engine will use.|
 |kvm_vm_ram|No|8912|How much memory the service engine will use.|
+|kvm_vm_os_disk_size|Yes|40|How much disk size the service engine will use.|
 |host_mgmt_intf|Yes||host management interface name|
 |vm_ctrl_ip|Yes||The IP address of the controller.|
 |vm_ctrl_username|Yes||The username to login into the controller.|
 |vm_ctrl_password|Yes||The password to login into the controller.|
 |vm_ctrl_version|Yes||The controller version.|
+|state|Yes|present|If present then create service engine and for absent destroy the service engine.|
 |se_auth_token|No||If defined it will be the token used to register the service engine to the controller|
 |bond_seq|Yes||Bonding sequence|
 |se_mgmt_ip|Yes||Management Ip for the service engine|
