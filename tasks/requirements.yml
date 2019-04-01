@@ -1,0 +1,89 @@
+---
+- name: Avi SE | KVM | Requirements | Check variables
+  assert:
+    that:
+      - "{{ item }} != None"
+    msg: "{{ item }} must be provided"
+  with_items:
+    - kvm_host_ip
+    - kvm_vm_hostname
+    - kvm_host_username
+    - kvm_host_password
+    - se_kvm_ctrl_ip
+    - se_kvm_ctrl_username
+    - se_kvm_ctrl_password
+    - se_kvm_ctrl_version
+    - se_kvm_mgmt_ip
+    - se_kvm_mgmt_mask
+    - se_kvm_default_gw
+    - se_bond_seq
+    - kvm_host_mgmt_intf
+    - kvm_pinning
+    - kvm_virt_intf_name
+    - kvm_total_num_vfs
+
+- name: "Avi SE | KVM | Validate total no of vfs and total intf names are equal or not"
+  fail:
+    msg: " Total no of vfs {{ kvm_total_num_vfs }} is not equal to the total no of kvm_virt_intf_name {{ kvm_virt_intf_name | length }}"
+  when: kvm_total_num_vfs != kvm_virt_intf_name | length
+
+- name: "Avi SE | KVM | Create directory on KVM Host"
+  file:
+   path: /root/{{ kvm_vm_hostname }}
+   state: directory
+
+- name: "Avi SE | KVM | Get the cloud uuid from Default-Cloud"
+  avi_api_session:
+    controller: "{{ se_kvm_ctrl_ip }}"
+    username: "{{ se_kvm_ctrl_username }}"
+    password: "{{ se_kvm_ctrl_password }}"
+    tenant: "admin"
+    api_version: "{{ se_kvm_ctrl_version }}"
+    http_method: get
+    path: "cloud?name=Default-Cloud"
+  register: se_cloud_data
+
+- name: "Avi SE | KVM | Get a token from the Avi Controller"
+  avi_api_session:
+    controller: "{{ se_kvm_ctrl_ip }}"
+    username: "{{ se_kvm_ctrl_username }}"
+    password: "{{ se_kvm_ctrl_password }}"
+    tenant: "admin"
+    api_version: "{{ se_kvm_ctrl_version }}"
+    http_method: get
+    path: securetoken-generate?cloud_uuid={{ se_cloud_data.obj.results[0].uuid }}
+  register: se_authtoken
+  when: se_auth_token is undefined
+
+- name: "Avi SE | KVM | Image deploy | generate SE image on the controller"
+  avi_api_session:
+    controller: "{{ se_kvm_ctrl_ip }}"
+    username: "{{ se_kvm_ctrl_username }}"
+    password: "{{ se_kvm_ctrl_password }}"
+    api_version: "{{ se_kvm_ctrl_version }}"
+    http_method: post
+    path: 'fileservice/seova'
+    timeout: 600
+    data:
+      file_format: qcow2
+  when: kvm_vm_base_img is undefined
+
+- name: "Avi SE | KVM | Get the se.qcow2 from the Avi Controller"
+  avi_api_fileservice:
+    controller: "{{ se_kvm_ctrl_ip }}"
+    username: "{{ se_kvm_ctrl_username }}"
+    password: "{{ se_kvm_ctrl_password }}"
+    upload: false
+    path: seova
+    file_path: /root/{{ kvm_vm_hostname }}/se.qcow2
+    params:
+      file_format: qcow2
+    api_version: "{{ se_kvm_ctrl_version }}"
+  when: kvm_vm_base_img is undefined
+
+- name: "Avi SE | KVM | Set SE authentication token"
+  set_fact:
+    se_auth_token: "{{ se_authtoken.obj.auth_token }}"
+  when: se_auth_token is undefined
+
+- debug: msg="Recieved Authentication {{ se_auth_token }} from {{ se_kvm_ctrl_ip }}"
