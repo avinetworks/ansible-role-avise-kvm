@@ -66,20 +66,14 @@
     genisoimage -input-charset utf-8 -output {{ CI_ISO }} -volid cidata -joliet -r {{ AVI_USER_DATA }} {{ AVI_META_DATA }}
   ignore_errors: yes
 
-- name: Get Os Version
-  shell: hostnamectl | grep 'Operating System'
-  register: os_version
-
-- name: "Avi SE | KVM | Deploy SE | Run if os_version is 17.04 OR OS is CentOS AND pinning is Yes"
+- name: "Avi SE | KVM | Deploy SE | Run if os_version is 17.04 OR OS is CentOS AND pinning is True"
   command: >
-    virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk {{ IMAGE }},format=qcow2,bus=virtio --check all=off --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ kvm_host_mgmt_intf }},source_mode=bridge,model=virtio,size={{ kvm_vm_os_disk_size }} --os-type=linux --os-variant=ubuntu16.04 --cpuset=auto --noautoconsole {{ host_dv_str }}
-  register: vm_xml_content
-  when: 'hostvars[inventory_hostname].ansible_distribution_version >= 17.04 or hostvars[inventory_hostname].ansible_distribution == "CentOS" and kvm_pinning'
+    virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk {{ IMAGE }},format=qcow2,bus=virtio,size={{ kvm_vm_os_disk_size }} --check all=off --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ kvm_host_mgmt_intf }},source_mode=bridge,model=virtio--os-type=linux --os-variant=ubuntu16.04 --cpuset=auto --noautoconsole {{ host_dv_str }}
+  when: 'hostvars[inventory_hostname].ansible_distribution_version | float >= 17.04 or hostvars[inventory_hostname].ansible_distribution == "CentOS" and kvm_pinning'
 
 - name: "Avi SE | KVM | Deploy SE | If Pinning is False"
   command: > 
-    virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk {{ IMAGE }},format=qcow2,bus=virtio --check all=off --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ kvm_host_mgmt_intf }},source_mode=bridge,model=virtio,size={{ kvm_vm_os_disk_size }} --os-type=linux --os-variant=ubuntu16.04 --noautoconsole {{ host_dv_str }}
-  register: vm_xml_content
+    virt-install --import --name {{ kvm_vm_hostname }} --ram {{ kvm_vm_ram }} --vcpus {{ kvm_vm_vcpus }} --disk {{ IMAGE }},format=qcow2,bus=virtio,size={{ kvm_vm_os_disk_size }} --check all=off --disk {{ CI_ISO }},device=cdrom --network type=direct,source={{ kvm_host_mgmt_intf }},source_mode=bridge,model=virtio --os-type=linux --os-variant=ubuntu16.04 --noautoconsole {{ host_dv_str }}
   when: not kvm_pinning
 
 - name: "Avi SE | KVM | Eject CDROM"
