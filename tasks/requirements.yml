@@ -27,6 +27,11 @@
     msg: " Total no of vfs {{ kvm_total_num_vfs }} is not equal to the total no of kvm_virt_intf_name {{ kvm_virt_intf_name | length }}"
   when: kvm_total_num_vfs != kvm_virt_intf_name | length
 
+- name: "Avi SE | KVM | Check pinning support on host"
+  fail:
+    msg: "Pinning is not supportable for the os version {{ hostvars[inventory_hostname].ansible_distribution_version }}"
+  when: 'hostvars[inventory_hostname].ansible_distribution_version | float == 16.04 and kvm_pinning'
+
 - name: "Avi SE | KVM | Create directory on KVM Host"
   file:
    path: /root/{{ kvm_vm_hostname }}
