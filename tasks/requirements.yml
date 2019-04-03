@@ -47,6 +47,7 @@
     http_method: get
     path: "cloud?name=Default-Cloud"
   register: se_cloud_data
+  when: se_auth_token is undefined
 
 - name: "Avi SE | KVM | Get a token from the Avi Controller"
   avi_api_session:
