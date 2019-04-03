@@ -81,3 +81,19 @@
 
 - name: "Avi SE | KVM | Remove CI_ISO and Host files"
   command: "rm -rf /root/{{ kvm_vm_hostname }} {{ CI_ISO }}"
+
+- name: "Avi SE | KVM | Verify SE connected to controller"
+  avi_api_session:
+    controller: "{{ se_kvm_ctrl_ip }}"
+    username: "{{ se_kvm_ctrl_username }}"
+    password: "{{ se_kvm_ctrl_password }}"
+    api_version: "{{ se_kvm_ctrl_version }}"
+    http_method: get
+    path: serviceengine
+    params:
+      name: "{{ se_kvm_mgmt_ip }}"
+      skip_default: true
+  retries: 120
+  delay: 5
+  register: se_obj
+  until: se_obj.obj.results[0].se_connected == true
