@@ -1,9 +1,9 @@
 ---
 # defaults file for playbooks/roles/kvm-vm
-kvm_host_ip: ~
+kvm_host_ip: "{{ inventory_hostname }}"
 kvm_vm_hostname: ~
-kvm_host_username: ~
-kvm_host_password: ~
+kvm_host_username: "{{ ansible_ssh_user }}"
+kvm_host_password: "{{ ansible_ssh_pass }}"
 #kvm_vm_base_img: ~
 kvm_vm_vcpus: "2"
 kvm_vm_ram: "2048"
