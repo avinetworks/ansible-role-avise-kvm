@@ -61,6 +61,11 @@
   register: se_authtoken
   when: se_auth_token is undefined
 
+- name: Check se.qcow2 is exist or not on the controller
+  shell: sshpass -p "{{ se_kvm_ctrl_password }}" ssh "{{ se_kvm_ctrl_username }}"@"{{ se_kvm_ctrl_ip }}" stat /opt/avi/se_ova/se.qcow2
+  register: stat_result
+  ignore_errors: yes
+
 - name: "Avi SE | KVM | Image deploy | generate SE image on the controller"
   avi_api_session:
     controller: "{{ se_kvm_ctrl_ip }}"
@@ -72,7 +77,7 @@
     timeout: 600
     data:
       file_format: qcow2
-  when: kvm_vm_base_img is undefined
+  when: 'kvm_vm_base_img is undefined and stat_result.stdout_lines | length == 0'
 
 - name: "Avi SE | KVM | Get the se.qcow2 from the Avi Controller"
   avi_api_fileservice:
