@@ -17,9 +17,17 @@
     src: user-data.j2
     dest: /root/{{ kvm_vm_hostname }}/user-data
 
-- name: "Avi SE | KVM | Copy se.qcow2 file into /var/lib/libvirt/images/"
+- name: "Avi SE | KVM | Copy se.qcow2 file into /root/{{ kvm_vm_hostname }}"
   copy:
     src: "{{ kvm_vm_base_img }}"
+    dest: "/root/{{ kvm_vm_hostname }}/se.qcow2"
+    remote_src: no
+    owner: root
+  when: kvm_vm_base_img is defined
+
+- name: "Avi SE | KVM | Copy se.qcow2 file into /var/lib/libvirt/images/"
+  copy:
+    src: "/root/{{ kvm_vm_hostname }}/se.qcow2"
     dest: "{{ IMAGE }}"
     remote_src: yes
     owner: root
@@ -94,6 +102,6 @@
       name: "{{ se_kvm_mgmt_ip }}"
       skip_default: true
   retries: 120
-  delay: 5
+  delay: 30
   register: se_obj
   until: se_obj.obj.count >= 1 and se_obj.obj.results[0].se_connected == true
