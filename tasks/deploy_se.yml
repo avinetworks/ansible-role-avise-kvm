@@ -102,6 +102,7 @@
       name: "{{ se_kvm_mgmt_ip }}"
       skip_default: true
   retries: 120
-  delay: 30
+  delay: 5
   register: se_obj
+  delegate_to: localhost
   until: se_obj.obj.count >= 1 and se_obj.obj.results[0].se_connected == true

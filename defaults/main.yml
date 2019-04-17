@@ -21,7 +21,7 @@ se_bond_seq: ~
 
 kvm_host_mgmt_intf: ~
 kvm_pinning: true
-
+kvm_force_mode: true
 state: "create"
 kvm_virt_intf_name: ~
 kvm_total_num_vfs: ~

@@ -24,6 +24,7 @@ Role Variables
 |se_kvm_ctrl_version|Yes||The controller version.|
 |state|No|create|If create then create service engine and for delete it will delete the service engine.|
 |se_auth_token|No||If defined it will be the token used to register the service engine to the controller|
+|kvm_force_mode|No|true|If VM with the given name exist then it will overwrite to that VM and for false it will stop the execution.|
 |se_bond_seq|Yes||Bonding sequence|
 |se_kvm_mgmt_ip|Yes||Management Ip for the service engine|
 |se_kvm_mgmt_mask|Yes||Subnet mask|
