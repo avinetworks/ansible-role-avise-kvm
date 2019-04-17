@@ -22,8 +22,9 @@ Role Variables
 |se_kvm_ctrl_username|Yes||The username to login into the controller.|
 |se_kvm_ctrl_password|Yes||The password to login into the controller.|
 |se_kvm_ctrl_version|Yes||The controller version.|
-|state|No|present|If present then create service engine and for absent destroy the service engine.|
+|state|No|create|If create then create service engine and for delete it will delete the service engine.|
 |se_auth_token|No||If defined it will be the token used to register the service engine to the controller|
+|kvm_force_mode|No|true|If VM with the given name exist then it will overwrite to that VM and for false it will stop the execution.|
 |se_bond_seq|Yes||Bonding sequence|
 |se_kvm_mgmt_ip|Yes||Management Ip for the service engine|
 |se_kvm_mgmt_mask|Yes||Subnet mask|
@@ -47,7 +48,7 @@ ansible_ssh_pass=<password>
 ```
 - hosts: kvm
   vars:
-    state: present
+    state: create
     kvm_vm_hostname: "se1"
     kvm_vm_vcpus: "2"
     kvm_vm_ram: "2048"

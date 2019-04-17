@@ -22,6 +22,28 @@
     - kvm_virt_intf_name
     - kvm_total_num_vfs
 
+- name: "Avi SE | KVM | Check vm {{ kvm_vm_hostname }} exist or not"
+  command: virsh dominfo {{ kvm_vm_hostname }}
+  register: domain_information
+  ignore_errors: yes
+
+- name: "Avi SE | KVM | Destroying the existing VM"
+  command: "virsh destroy {{ kvm_vm_hostname }}"
+  when: 'domain_information.stdout != "" and kvm_force_mode'
+
+- name: "Avi SE | KVM | Removing the existing VM"
+  command: "virsh undefine {{ kvm_vm_hostname }}"
+  when: 'domain_information.stdout != "" and kvm_force_mode'
+
+- name: "Avi SE | KVM | Exit the execution"
+  fail:
+    msg: "Not overwriting {{ kvm_vm_hostname }}. Exiting..."
+  when: 'domain_information.stdout != "" and not kvm_force_mode'
+
+- name: "Avi SE | KVM | Removing the existing VM data and qcow2"
+  command: "rm -rf /root/{{ kvm_vm_hostname }} /var/lib/libvirt/images/{{ kvm_vm_hostname }}.qcow2"
+  when: 'domain_information.stdout != "" and kvm_force_mode'
+
 - name: "Avi SE | KVM | Validate total no of vfs and total intf names are equal or not"
   fail:
     msg: " Total no of vfs {{ kvm_total_num_vfs }} is not equal to the total no of kvm_virt_intf_name {{ kvm_virt_intf_name | length }}"
@@ -34,7 +56,7 @@
 
 - name: "Avi SE | KVM | Create directory on KVM Host"
   file:
-   path: /root/{{ kvm_vm_hostname }}
+   path: "/root/{{ kvm_vm_hostname }}"
    state: directory
 
 - name: "Avi SE | KVM | Get the cloud uuid from Default-Cloud"
@@ -47,7 +69,8 @@
     http_method: get
     path: "cloud?name=Default-Cloud"
   register: se_cloud_data
-  when: se_auth_token is undefined
+  when: 'se_auth_token is undefined'
+  delegate_to: localhost
 
 - name: "Avi SE | KVM | Get a token from the Avi Controller"
   avi_api_session:
@@ -59,12 +82,8 @@
     http_method: get
     path: securetoken-generate?cloud_uuid={{ se_cloud_data.obj.results[0].uuid }}
   register: se_authtoken
-  when: se_auth_token is undefined
-
-- name: Check se.qcow2 is exist or not on the controller
-  shell: sshpass -p "{{ se_kvm_ctrl_password }}" ssh "{{ se_kvm_ctrl_username }}"@"{{ se_kvm_ctrl_ip }}" stat /opt/avi/se_ova/se.qcow2
-  register: stat_result
-  ignore_errors: yes
+  when: 'se_auth_token is undefined'
+  delegate_to: localhost
 
 - name: "Avi SE | KVM | Image deploy | generate SE image on the controller"
   avi_api_session:
@@ -77,7 +96,8 @@
     timeout: 600
     data:
       file_format: qcow2
-  when: 'kvm_vm_base_img is undefined and stat_result.stdout_lines | length == 0'
+  when: 'kvm_vm_base_img is undefined'
+  delegate_to: localhost
 
 - name: "Avi SE | KVM | Get the se.qcow2 from the Avi Controller"
   avi_api_fileservice:
@@ -86,15 +106,24 @@
     password: "{{ se_kvm_ctrl_password }}"
     upload: false
     path: seova
-    file_path: /root/{{ kvm_vm_hostname }}/se.qcow2
+    file_path: /tmp/se.qcow2
     params:
       file_format: qcow2
     api_version: "{{ se_kvm_ctrl_version }}"
-  when: kvm_vm_base_img is undefined
+  when: 'kvm_vm_base_img is undefined'
+  delegate_to: localhost
+
+- name: "Avi SE | KVM | Copy se.qcow2 file into /root/{{ kvm_vm_hostname }} on KVM host"
+  copy:
+    src: "/tmp/se.qcow2"
+    dest: "/root/{{ kvm_vm_hostname }}"
+    remote_src: no
+    owner: root
+  when: 'kvm_vm_base_img is undefined'
 
 - name: "Avi SE | KVM | Set SE authentication token"
   set_fact:
     se_auth_token: "{{ se_authtoken.obj.auth_token }}"
-  when: se_auth_token is undefined
+  when: 'se_auth_token is undefined'
 
 - debug: msg="Recieved Authentication {{ se_auth_token }} from {{ se_kvm_ctrl_ip }}"

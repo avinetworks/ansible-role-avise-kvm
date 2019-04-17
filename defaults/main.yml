@@ -21,8 +21,8 @@ se_bond_seq: ~
 
 kvm_host_mgmt_intf: ~
 kvm_pinning: true
-
-state: "present"
+kvm_force_mode: true
+state: "create"
 kvm_virt_intf_name: ~
 kvm_total_num_vfs: ~
 CI_ISO: /var/lib/libvirt/images/{{ kvm_vm_hostname }}-cidata.iso
