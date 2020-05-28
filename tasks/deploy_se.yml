@@ -106,3 +106,16 @@
   register: se_obj
   delegate_to: localhost
   until: se_obj.obj.count >= 1 and se_obj.obj.results[0].se_connected == true
+
+- block:
+  - name: Avi SE | KVM | Service deploy | Configure vnic ips
+    avi_update_se_data_vnics:
+      controller: "{{ se_kvm_ctrl_ip }}"
+      username: "{{ se_kvm_ctrl_username }}"
+      password: "{{ se_kvm_ctrl_password }}"
+      api_version: "{{ se_kvm_ctrl_version }}"
+      se_name: "{{ se_kvm_mgmt_ip }}"
+      tenant: "{{ se_tenant }}"
+      data_vnics_config: "{{ se_kvm_vnics_config }}"
+    delegate_to: localhost
+  when: se_kvm_vnics_config

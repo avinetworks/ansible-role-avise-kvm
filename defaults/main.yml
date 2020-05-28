@@ -18,6 +18,8 @@ se_kvm_mgmt_ip: ~
 se_kvm_mgmt_mask: ~
 se_kvm_default_gw: ~
 se_bond_seq: ~
+se_kvm_vnics_config: ~
+se_tenant: "admin"
 
 kvm_host_mgmt_intf: ~
 kvm_pinning: true
