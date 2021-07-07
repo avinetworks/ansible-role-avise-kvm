@@ -1,5 +1,6 @@
+---
 galaxy_info:
-  role_name: avise-kvm
+  role_name: avise_kvm
   author: Avi Networks
   description: Ansible Role to setup Avi Service Engine on KVM
   company: Avi Networks
@@ -31,4 +32,4 @@ galaxy_info:
     - gslb
     - kvm
 dependencies:
-  - { role: avinetworks.avisdk }
+  - {role: avinetworks.avisdk}

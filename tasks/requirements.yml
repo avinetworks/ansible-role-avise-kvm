@@ -29,20 +29,25 @@
 
 - name: "Avi SE | KVM | Destroying the existing VM"
   command: "virsh destroy {{ kvm_vm_hostname }}"
-  when: 'domain_information.stdout != "" and kvm_force_mode'
+  when: 'domain_information.stdout | length > 0 and kvm_force_mode'
 
 - name: "Avi SE | KVM | Removing the existing VM"
   command: "virsh undefine {{ kvm_vm_hostname }}"
-  when: 'domain_information.stdout != "" and kvm_force_mode'
+  when: 'domain_information.stdout | length > 0 and kvm_force_mode'
 
 - name: "Avi SE | KVM | Exit the execution"
   fail:
     msg: "Not overwriting {{ kvm_vm_hostname }}. Exiting..."
-  when: 'domain_information.stdout != "" and not kvm_force_mode'
+  when: 'domain_information.stdout | length > 0 and not kvm_force_mode'
 
 - name: "Avi SE | KVM | Removing the existing VM data and qcow2"
-  command: "rm -rf /root/{{ kvm_vm_hostname }} /var/lib/libvirt/images/{{ kvm_vm_hostname }}.qcow2"
-  when: 'domain_information.stdout != "" and kvm_force_mode'
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/root/{{ kvm_vm_hostname }}"
+    - "/var/lib/libvirt/images/{{ kvm_vm_hostname }}.qcow2"
+  when: 'domain_information.stdout | length > 0 and kvm_force_mode'
 
 - name: "Avi SE | KVM | Validate total no of vfs and total intf names are equal or not"
   fail:
@@ -58,6 +63,7 @@
   file:
    path: "/root/{{ kvm_vm_hostname }}"
    state: directory
+   mode: 0644
 
 - name: "Avi SE | KVM | Get the cloud uuid from Default-Cloud"
   avi_api_session:
@@ -93,7 +99,7 @@
     api_version: "{{ se_kvm_ctrl_version }}"
     http_method: post
     path: 'fileservice/seova'
-    timeout: 700
+    timeout: "{{ se_image_gen_timeout }}"
     data:
       file_format: qcow2
   when: 'kvm_vm_base_img is undefined'
@@ -119,6 +125,7 @@
     dest: "/root/{{ kvm_vm_hostname }}"
     remote_src: no
     owner: root
+    mode: 0644
   when: 'kvm_vm_base_img is undefined'
 
 - name: "Avi SE | KVM | Set SE authentication token"
@@ -126,4 +133,5 @@
     se_auth_token: "{{ se_authtoken.obj.auth_token }}"
   when: 'se_auth_token is undefined'
 
-- debug: msg="Recieved Authentication {{ se_auth_token }} from {{ se_kvm_ctrl_ip }}"
+- name: "Avi SE | KVM | Print auth token"
+  debug: msg="Recieved Authentication {{ se_auth_token }} from {{ se_kvm_ctrl_ip }}"
