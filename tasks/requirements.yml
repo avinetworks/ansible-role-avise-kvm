@@ -93,7 +93,7 @@
     api_version: "{{ se_kvm_ctrl_version }}"
     http_method: post
     path: 'fileservice/seova'
-    timeout: 600
+    timeout: 700
     data:
       file_format: qcow2
   when: 'kvm_vm_base_img is undefined'
