@@ -5,7 +5,7 @@ Requirements
 ------------
  - python >= 2.6
  - avisdk : It can be installed by `pip install avisdk --upgrade`
- - avinetworks.avisdk : It can be installed by `ansible-galaxy install -f avinetworks.avisdk` 
+ - avinetworks.avisdk : It can be installed by `ansible-galaxy install -f avinetworks.avisdk`
 
 Role Variables
 --------------
@@ -32,6 +32,7 @@ Role Variables
 |kvm_pinning|Yes||If you want to enable pinning CPU for the VM|
 |kvm_total_num_vfs|Yes||Numbers VFs will be pass-through to VM|
 |kvm_virt_intf_name|Yes||Virtual Function name will be pass-through to VM|
+|se_image_gen_timeout|No|700|Timeout value for SE image generation|
 
 
 ### Standard Example
